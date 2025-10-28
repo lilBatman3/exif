@@ -1,0 +1,35 @@
+import React from 'react';
+import { UploadedImage } from '../types';
+
+interface ImageListProps {
+  images: UploadedImage[];
+  selectedImageId: string | null;
+  onSelectImage: (id: string) => void;
+}
+
+export const ImageList: React.FC<ImageListProps> = ({ images, selectedImageId, onSelectImage }) => {
+  return (
+    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 h-full">
+      <h2 className="text-xl font-semibold mb-4 text-pink-600 border-b border-gray-200 pb-2">Uploaded Images</h2>
+      <div className="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
+        {images.map(image => (
+          <button
+            key={image.id}
+            onClick={() => onSelectImage(image.id)}
+            className={`w-full text-left p-3 rounded-lg flex items-center gap-4 transition-colors duration-200 ${selectedImageId === image.id ? 'bg-pink-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}
+          >
+            <img src={image.url} alt={image.file.name} className="w-12 h-12 rounded-md object-cover flex-shrink-0" />
+            <div className="flex-grow overflow-hidden">
+              <p className={`text-sm font-medium truncate ${selectedImageId === image.id ? 'text-white' : 'text-gray-900'}`}>{image.file.name}</p>
+              <div className={`text-xs ${selectedImageId === image.id ? 'text-pink-100' : 'text-gray-500'}`}>
+                {image.isLoading && <span><i className="fas fa-spinner fa-spin mr-1"></i> Loading...</span>}
+                {image.error && <span className="text-red-500"><i className="fas fa-exclamation-circle mr-1"></i> Error</span>}
+                {image.exifData && <span className="text-green-600"><i className="fas fa-check-circle mr-1"></i> Analyzed</span>}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};

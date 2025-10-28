@@ -1,0 +1,5 @@
+{
+  "name": "EXIF Data Viewer",
+  "description": "An application that allows users to upload an image to analyze and extract its hidden EXIF data, such as camera type, date and time of capture, shooting settings, and location if available. The application reads this information and displays it in an organized and easy-to-understand manner.",
+  "requestFramePermissions": []
+}
