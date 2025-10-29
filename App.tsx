@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { UploadedImage } from './types';
 import { getExifData } from './services/exifService';
 import { downloadImageWithoutExif } from './services/imageService';
 import { Login } from './components/Login';
+import { Register } from './components/Register';
 import { IntroductionPage } from './components/IntroductionPage';
 import { TryPage } from './components/TryPage';
 import { LandingPage } from './components/LandingPage';
@@ -11,9 +12,32 @@ import { ImageDetail } from './components/ImageDetail';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [view, setView] = useState<'introduction' | 'try' | 'login'>('introduction');
+  const [view, setView] = useState<'introduction' | 'try' | 'login' | 'register'>('introduction');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('rd-theme')) {
+      return localStorage.getItem('rd-theme') as 'light' | 'dark';
+    }
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('rd-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('rd-theme', 'light');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
 
   const handleImageUpload = useCallback(async (files: FileList) => {
     const newImages: UploadedImage[] = Array.from(files).map((file) => ({
@@ -105,7 +129,9 @@ const App: React.FC = () => {
   if (!isAuthenticated) {
     switch(view) {
       case 'login':
-        return <Login onLoginSuccess={handleLoginSuccess} onBack={() => setView('introduction')} />;
+        return <Login onLoginSuccess={handleLoginSuccess} onBack={() => setView('introduction')} onGoToRegister={() => setView('register')} />;
+      case 'register':
+        return <Register onRegisterSuccess={() => setView('login')} onBackToLogin={() => setView('login')} />;
       case 'try':
         return <TryPage onBack={() => setView('introduction')} onLoginClick={() => setView('login')} />;
       case 'introduction':
@@ -117,29 +143,36 @@ const App: React.FC = () => {
   const selectedImage = uploadedImages.find(img => img.id === selectedImageId);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col items-center p-4 sm:p-6 lg:p-8 font-sans">
-      <header className="w-full max-w-7xl text-center mb-8 relative">
-        <h1 className="text-4xl sm:text-5xl font-bold text-pink-600">
-          <i className="fas fa-camera-retro mr-3"></i>
-          RD Exchangeable
-        </h1>
-        {uploadedImages.length === 0 && (
-           <p className="text-lg text-gray-500 mt-2">
-            Upload your images to analyze their hidden metadata
-          </p>
-        )}
-         <button
-            onClick={handleLogout}
-            className="absolute top-0 right-0 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2"
-            aria-label="Logout"
-            title="Logout"
-          >
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </button>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+      <header className="w-full bg-white dark:bg-gray-800 shadow-md sticky top-0 z-20 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+              <i className="fas fa-camera-retro"></i>
+              RD Exchangeable
+            </h1>
+            <div className="flex items-center gap-4">
+               <button
+                  onClick={toggleTheme}
+                  className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold w-10 h-10 rounded-full transition-colors duration-300 flex items-center justify-center"
+                  aria-label="Toggle theme"
+                  title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                >
+                  {theme === 'light' ? <i className="fas fa-moon"></i> : <i className="fas fa-sun"></i>}
+              </button>
+              <button
+                  onClick={handleLogout}
+                  className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+        </div>
       </header>
-
-      <main className="w-full max-w-7xl flex-grow">
+      
+      <main className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         {uploadedImages.length === 0 ? (
           <LandingPage onImageUpload={handleImageUpload} />
         ) : (
@@ -160,15 +193,15 @@ const App: React.FC = () => {
                   imageCount={uploadedImages.length}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full bg-white rounded-xl p-6 border border-gray-200">
-                  <p className="text-xl text-gray-500">Please select an image to view its details</p>
+                <div className="flex items-center justify-center h-full bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                  <p className="text-xl text-gray-500 dark:text-gray-400">Please select an image to view its details</p>
                 </div>
               )}
             </div>
           </div>
         )}
       </main>
-       <footer className="w-full max-w-5xl text-center mt-12 text-gray-500 text-sm">
+       <footer className="w-full max-w-5xl mx-auto text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
           <p>Developed by a Senior Frontend Engineer specializing in React &amp; Gemini API.</p>
         </footer>
     </div>

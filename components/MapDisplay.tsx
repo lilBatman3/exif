@@ -15,7 +15,7 @@ export const MapDisplay: React.FC<MapDisplayProps> = ({ lat, lon }) => {
 
   return (
     <div>
-      <div className="w-full h-64 md:h-80 rounded-lg overflow-hidden border-2 border-gray-200">
+      <div className="w-full h-64 md:h-80 rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
         <iframe
           width="100%"
           height="100%"
@@ -33,7 +33,7 @@ export const MapDisplay: React.FC<MapDisplayProps> = ({ lat, lon }) => {
           href={googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-300"
+          className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 font-bold py-2 px-4 rounded-lg transition-colors duration-300"
           title="View location on Google Maps in a new tab"
         >
           <i className="fas fa-external-link-alt"></i>

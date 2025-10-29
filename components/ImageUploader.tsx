@@ -42,7 +42,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, mul
 
   return (
     <div
-      className={`relative border-4 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-white hover:border-pink-400 hover:bg-gray-100'}`}
+      className={`relative border-4 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'border-gray-500 bg-gray-100 dark:bg-gray-800/50' : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500 dark:hover:bg-gray-800'}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -57,10 +57,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, mul
         multiple={multiple}
       />
       <label htmlFor="file-upload" className="flex flex-col items-center justify-center space-y-4 cursor-pointer">
-        <i className={`fas fa-cloud-upload-alt text-6xl transition-transform duration-300 ${isDragging ? 'scale-110 text-pink-500' : 'text-gray-400'}`} title="Upload images for analysis"></i>
-        <p className="text-xl font-semibold text-gray-700">Drag & drop your images here</p>
-        <p className="text-gray-500">or</p>
-        <span className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" title="Open file selector">
+        <i className={`fas fa-cloud-upload-alt text-6xl transition-transform duration-300 ${isDragging ? 'scale-110 text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`} title="Upload images for analysis"></i>
+        <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">Drag & drop your images here</p>
+        <p className="text-gray-500 dark:text-gray-400">or</p>
+        <span className="bg-gray-800 hover:bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 font-bold py-2 px-6 rounded-lg transition-colors" title="Open file selector">
           Choose Files
         </span>
       </label>

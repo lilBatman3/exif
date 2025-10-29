@@ -7,9 +7,9 @@ interface ExifDisplayProps {
 }
 
 const DataRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
-    <dt className="text-sm font-medium text-gray-500">{label}</dt>
-    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 text-right">{value}</dd>
+  <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</dt>
+    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2 text-right">{value}</dd>
   </div>
 );
 
@@ -31,12 +31,12 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen
   }
   
   return (
-    <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
       <h2>
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center justify-between w-full px-4 py-4 sm:px-6 text-left font-medium text-pink-600 bg-gray-50 hover:bg-gray-100 transition-colors duration-300"
+          className="flex items-center justify-between w-full px-4 py-4 sm:px-6 text-left font-medium text-gray-800 dark:text-gray-100 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 transition-colors duration-300"
           aria-expanded={isOpen}
         >
           <span className="flex items-center gap-3">
@@ -47,7 +47,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen
         </button>
       </h2>
       <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0">
           <dl className="px-6">
             {validChildren}
           </dl>
