@@ -1,13 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { ExifData, UploadedImage } from './types';
+import { UploadedImage } from './types';
 import { getExifData } from './services/exifService';
+import { downloadImageWithoutExif } from './services/imageService';
 import { Login } from './components/Login';
+import { IntroductionPage } from './components/IntroductionPage';
+import { TryPage } from './components/TryPage';
 import { LandingPage } from './components/LandingPage';
 import { ImageList } from './components/ImageList';
 import { ImageDetail } from './components/ImageDetail';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [view, setView] = useState<'introduction' | 'try' | 'login'>('introduction');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
@@ -30,19 +34,26 @@ const App: React.FC = () => {
       try {
         const data = await getExifData(image.file);
         if (Object.keys(data).length === 0) {
-          throw new Error("No EXIF data found.");
+           setUploadedImages((prevImages) =>
+            prevImages.map((img) =>
+              img.id === image.id
+                ? { ...img, exifData: {}, error: "No EXIF data was found in this image.", isLoading: false }
+                : img
+            )
+          );
+        } else {
+          setUploadedImages((prevImages) =>
+            prevImages.map((img) =>
+              img.id === image.id ? { ...img, exifData: data, isLoading: false } : img
+            )
+          );
         }
-        setUploadedImages((prevImages) =>
-          prevImages.map((img) =>
-            img.id === image.id ? { ...img, exifData: data, isLoading: false } : img
-          )
-        );
       } catch (e: any) {
         console.error(e);
         setUploadedImages((prevImages) =>
           prevImages.map((img) =>
             img.id === image.id
-              ? { ...img, error: e.message || "An error occurred while parsing the image.", isLoading: false }
+              ? { ...img, error: "Could not parse EXIF data from this image.", isLoading: false }
               : img
           )
         );
@@ -64,14 +75,43 @@ const App: React.FC = () => {
   const handleLogout = () => {
     handleReset();
     setIsAuthenticated(false);
+    setView('introduction');
   };
 
   const handleSelectImage = (id: string) => {
     setSelectedImageId(id);
   };
 
+  const handleDownloadCleaned = useCallback(async (tagsToRemove: Set<string>, applyToAll: boolean) => {
+    const imagesToProcess = applyToAll 
+      ? uploadedImages.filter(img => img.exifData && Object.keys(img.exifData).length > 0)
+      : uploadedImages.filter(img => img.id === selectedImageId);
+
+    if (imagesToProcess.length === 0) {
+      alert("No image with EXIF data was selected to process.");
+      return;
+    }
+
+    for (const image of imagesToProcess) {
+        try {
+            await downloadImageWithoutExif(image.file, tagsToRemove);
+        } catch (error) {
+            console.error("Failed to download cleaned image:", image.file.name, error);
+            alert(`Could not process and download ${image.file.name}. See console for details.`);
+        }
+    }
+  }, [uploadedImages, selectedImageId]);
+
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    switch(view) {
+      case 'login':
+        return <Login onLoginSuccess={handleLoginSuccess} onBack={() => setView('introduction')} />;
+      case 'try':
+        return <TryPage onBack={() => setView('introduction')} onLoginClick={() => setView('login')} />;
+      case 'introduction':
+      default:
+        return <IntroductionPage onLoginClick={() => setView('login')} onTryClick={() => setView('try')} />;
+    }
   }
 
   const selectedImage = uploadedImages.find(img => img.id === selectedImageId);
@@ -81,7 +121,7 @@ const App: React.FC = () => {
       <header className="w-full max-w-7xl text-center mb-8 relative">
         <h1 className="text-4xl sm:text-5xl font-bold text-pink-600">
           <i className="fas fa-camera-retro mr-3"></i>
-          EXIF Data Viewer
+          RD Exchangeable
         </h1>
         {uploadedImages.length === 0 && (
            <p className="text-lg text-gray-500 mt-2">
@@ -92,6 +132,7 @@ const App: React.FC = () => {
             onClick={handleLogout}
             className="absolute top-0 right-0 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2"
             aria-label="Logout"
+            title="Logout"
           >
             <i className="fas fa-sign-out-alt"></i>
             <span>Logout</span>
@@ -115,6 +156,8 @@ const App: React.FC = () => {
                 <ImageDetail 
                   image={selectedImage}
                   onReset={handleReset}
+                  onDownloadCleaned={handleDownloadCleaned}
+                  imageCount={uploadedImages.length}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full bg-white rounded-xl p-6 border border-gray-200">

@@ -4,7 +4,6 @@ import { MapDisplay } from './MapDisplay';
 
 interface ExifDisplayProps {
   data: ExifData;
-  imageUrl: string;
 }
 
 const DataRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
@@ -20,9 +19,10 @@ interface AccordionSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  iconTooltip: string;
 }
 
-const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen, onToggle, children }) => {
+const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen, onToggle, children, iconTooltip }) => {
   // Filter out null/undefined children to avoid rendering empty rows
   const validChildren = React.Children.toArray(children).filter(child => child);
 
@@ -40,10 +40,10 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen
           aria-expanded={isOpen}
         >
           <span className="flex items-center gap-3">
-            <i className={`fas ${icon}`}></i>
+            <i className={`fas ${icon}`} title={iconTooltip}></i>
             <span>{title}</span>
           </span>
-          <i className={`fas fa-chevron-down transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}></i>
+          <i className={`fas fa-chevron-down transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} title={isOpen ? 'Collapse section' : 'Expand section'}></i>
         </button>
       </h2>
       <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
@@ -58,7 +58,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, isOpen
 };
 
 
-export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
+export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data }) => {
   const [openSections, setOpenSections] = useState({
     basic: true,
     shooting: false,
@@ -68,28 +68,6 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
   const handleToggle = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({...prev, [section]: !prev[section]}));
   };
-
-  const handleRemoveExifAndDownload = () => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = 'image_without_exif.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    };
-    img.src = imageUrl;
-  };
   
   const formatExposureTime = (value?: number) => {
     if (value === undefined || value === null) return null;
@@ -98,6 +76,21 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
     }
     return `${value} sec`;
   }
+
+  const formatOrientation = (value?: number): string | null => {
+    if (value === undefined || value === null) return null;
+    switch (value) {
+        case 1: return 'Horizontal (normal)';
+        case 2: return 'Mirror horizontal';
+        case 3: return 'Rotate 180°';
+        case 4: return 'Mirror vertical';
+        case 5: return 'Mirror horizontal and rotate 270° CW';
+        case 6: return 'Rotate 90° CW';
+        case 7: return 'Mirror horizontal and rotate 90° CW';
+        case 8: return 'Rotate 270° CW';
+        default: return `Unknown (${value})`;
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -106,11 +99,13 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
         icon="fa-info-circle"
         isOpen={openSections.basic}
         onToggle={() => handleToggle('basic')}
+        iconTooltip="View basic image details like camera model and date."
       >
         {data.Make && <DataRow label="Make" value={data.Make} />}
         {data.Model && <DataRow label="Model" value={data.Model} />}
         {data.DateTimeOriginal && <DataRow label="Date Taken" value={data.DateTimeOriginal} />}
         {data.PixelXDimension && data.PixelYDimension && <DataRow label="Dimensions" value={`${data.PixelXDimension} x ${data.PixelYDimension} pixels`} />}
+        {data.Orientation !== undefined && <DataRow label="Orientation" value={formatOrientation(data.Orientation)} />}
         {data.Software && <DataRow label="Software" value={data.Software} />}
         {data.Artist && <DataRow label="Artist" value={data.Artist} />}
         {data.Copyright && <DataRow label="Copyright" value={data.Copyright} />}
@@ -121,6 +116,7 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
         icon="fa-sliders-h"
         isOpen={openSections.shooting}
         onToggle={() => handleToggle('shooting')}
+        iconTooltip="View camera settings like aperture and ISO."
       >
         {data.ExposureTime !== undefined && <DataRow label="Exposure Time" value={formatExposureTime(data.ExposureTime)} />}
         {data.FNumber && <DataRow label="Aperture" value={`f/${data.FNumber}`} />}
@@ -135,6 +131,7 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
           icon="fa-map-marker-alt"
           isOpen={openSections.gps}
           onToggle={() => handleToggle('gps')}
+          iconTooltip="View GPS location data on a map."
         >
           <DataRow label="Latitude" value={data.gps.latitude.toFixed(6)} />
           <DataRow label="Longitude" value={data.gps.longitude.toFixed(6)} />
@@ -143,16 +140,6 @@ export const ExifDisplay: React.FC<ExifDisplayProps> = ({ data, imageUrl }) => {
           </div>
         </AccordionSection>
       )}
-
-       <div className="pt-2">
-          <button
-            onClick={handleRemoveExifAndDownload}
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
-          >
-            <i className="fas fa-download"></i>
-            <span>Remove EXIF & Download</span>
-          </button>
-        </div>
     </div>
   );
 };

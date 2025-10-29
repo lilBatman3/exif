@@ -1,5 +1,5 @@
 {
-  "name": "EXIF Data Viewer",
-  "description": "An application that allows users to upload an image to analyze and extract its hidden EXIF data, such as camera type, date and time of capture, shooting settings, and location if available. The application reads this information and displays it in an organized and easy-to-understand manner.",
+  "name": "RD Exchangeable",
+  "description": "RD Exchangeable helps you understand and manage the hidden data (EXIF) in your photos. Protect your privacy by easily viewing and removing sensitive information like location, camera details, and timestamps before sharing your images online.",
   "requestFramePermissions": []
 }

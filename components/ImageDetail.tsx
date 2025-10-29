@@ -1,22 +1,27 @@
 import React from 'react';
 import { UploadedImage } from '../types';
 import { ExifDisplay } from './ExifDisplay';
+import { ExifRemovalPanel } from './ExifRemovalPanel';
 
 interface ImageDetailProps {
   image: UploadedImage;
   onReset: () => void;
+  resetButtonText?: string;
+  onDownloadCleaned?: (tagsToRemove: Set<string>, applyToAll: boolean) => void;
+  imageCount?: number;
 }
 
-export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset }) => {
+export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset, resetButtonText = 'Analyze Other Images', onDownloadCleaned, imageCount = 1 }) => {
   return (
     <div className="w-full">
       <div className="flex justify-center mb-6">
         <button
           onClick={onReset}
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2"
+          title="Clear current images and upload new ones"
         >
-          <i className="fas fa-file-upload"></i>
-          <span>Analyze Other Images</span>
+          <i className="fas fa-redo-alt"></i>
+          <span>{resetButtonText}</span>
         </button>
       </div>
       
@@ -25,7 +30,7 @@ export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset }) => {
             <h2 className="text-2xl font-semibold mb-4 text-pink-600">Your Selected Image</h2>
             <img src={image.url} alt={image.file.name} className="max-w-full max-h-[60vh] rounded-lg object-contain" />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-8">
             {image.isLoading && (
                 <div className="flex items-center justify-center h-full bg-white rounded-xl p-6 border border-gray-200">
                     <i className="fas fa-spinner fa-spin text-4xl text-pink-500"></i>
@@ -33,7 +38,19 @@ export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset }) => {
                 </div>
             )}
             {image.error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-center">{image.error}</div>}
-            {image.exifData && <ExifDisplay data={image.exifData} imageUrl={image.url} />}
+            {image.exifData && onDownloadCleaned && (
+              <>
+                <ExifDisplay data={image.exifData} />
+                <ExifRemovalPanel
+                  exifData={image.exifData}
+                  onDownload={onDownloadCleaned}
+                  imageCount={imageCount}
+                />
+              </>
+            )}
+             {image.exifData && !onDownloadCleaned && (
+               <ExifDisplay data={image.exifData} />
+            )}
         </div>
       </div>
     </div>
