@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UploadedImage } from '../types';
 import { ExifDisplay } from './ExifDisplay';
 import { ExifRemovalPanel } from './ExifRemovalPanel';
@@ -12,6 +12,21 @@ interface ImageDetailProps {
 }
 
 export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset, resetButtonText = 'Analyze Other Images', onDownloadCleaned, imageCount = 1 }) => {
+  const [rotation, setRotation] = useState(0);
+
+  // Reset rotation when a new image is selected
+  useEffect(() => {
+    setRotation(0);
+  }, [image.id]);
+
+  const handleRotate = (direction: 'cw' | 'ccw') => {
+    setRotation(prev => {
+      const newRotation = direction === 'cw' ? prev + 90 : prev - 90;
+      // Ensure the result is always a positive number between 0 and 270
+      return (newRotation % 360 + 360) % 360;
+    });
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-center mb-6">
@@ -28,8 +43,31 @@ export const ImageDetail: React.FC<ImageDetailProps> = ({ image, onReset, resetB
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">{image.file.name}</h2>
-            <div className="w-full flex-grow flex items-center justify-center">
-                 <img src={image.url} alt={image.file.name} className="max-w-full max-h-[60vh] rounded-lg object-contain shadow-2xl" />
+            <div className="w-full flex-grow flex items-center justify-center overflow-hidden">
+                 <img 
+                    src={image.url} 
+                    alt={image.file.name} 
+                    className="max-w-full max-h-[55vh] rounded-lg object-contain shadow-2xl transition-transform duration-300"
+                    style={{ transform: `rotate(${rotation}deg)` }}
+                />
+            </div>
+            <div className="mt-4 flex items-center gap-4">
+              <button
+                onClick={() => handleRotate('ccw')}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 font-bold w-10 h-10 rounded-full transition-colors duration-300 flex items-center justify-center"
+                title="Rotate Counter-Clockwise"
+                aria-label="Rotate image counter-clockwise"
+              >
+                <i className="fas fa-rotate-left"></i>
+              </button>
+              <button
+                onClick={() => handleRotate('cw')}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 font-bold w-10 h-10 rounded-full transition-colors duration-300 flex items-center justify-center"
+                title="Rotate Clockwise"
+                aria-label="Rotate image clockwise"
+              >
+                <i className="fas fa-rotate-right"></i>
+              </button>
             </div>
         </div>
         <div className="flex flex-col gap-8">
